@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  nextcloud:
+    image: nextcloud:latest
+    container_name: nextcloud
+    restart: always
+    ports:
+      - 8080:80
+    volumes:
+      - ./nextcloud_data:/var/www/html
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=cloudfinal
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=cloudfinal
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=cloudfinal
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+
+  locust:
+    image: locustio/locust
+    container_name: locust
+    ports:
+      - 8089:8089
+    volumes:
+      - ./locust_tasks:/locust_tasks
+      - ./test_data:/test_data
+    command: -f /locust_tasks/locustfile.py --host=http://nextcloud
+    depends_on:
+      - nextcloud
+
+volumes:
+  nextcloud_data:
+  mysql_data:
